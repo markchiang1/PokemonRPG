@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Pokemon RPG</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="style.css">
+ 
+</head>
+
+<body>
+<br>
+<div class="container-fluid">
+    <div class="row" id="characters">
+    <div class='col-lg-12 headingBanner'>
+    <h1>Pokemon RPG</h1>
+    <br>
+    </div>
+    <br>
+    <br>
+    <br>
+    <div class="row text-center" id="gameplay">
+
+    </div>
+    
+</div>
+
+<script
+    src="http://code.jquery.com/jquery-3.3.1.min.js"
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    crossorigin="anonymous"></script>
+
+<script>
+    var gameBegin=false
+    var chosenHero
+    var chosenEnemy
+    var isBattle=true
+    var isHeroAlive=true
+    var isEnemyAlive=true
+    var firstBattle=true
+    var computerAttack
+    var computerHealth
+    var userHealth
+
+$(document).ready(function(){
+    var charArr = [{ 
+        name: "Geodude",
+        level:5,
+        xpToLevelUp:50,
+        hp:100,
+        battleHP:100,
+        strength: 15,
+        type:"rock",
+        image:"assets/images/geodude.png",
+        special:["Mud Slide", 20]
+    },
+    {
+        name: "Squirtle",
+        level:5,
+        xpToLevelUp:50,
+        hp:100,
+        battleHP:100,
+        strength: 8,
+        type:"water",
+        image:"assets/images/squirtle.png",
+        special:["WATER GUN", 30] 
+
+    },
+    { 
+        name: "Bulbasaur",
+        level:5,
+        xpToLevelUp:50,
+        hp:100,
+        battleHP:100,
+        strength: 10,
+        type:"grass",
+        image:"assets/images/bulbasaur.png", 
+        special:["VINE WHIP", 25]
+    },
+    { 
+        name: "Pikachu",
+        level:5,
+        xpToLevelUp:50,
+        hp:100,
+        battleHP:100,
+        strength: 5,
+        type:"electric",
+        image:"assets/images/pikachu.png" ,
+        special:["Thunder SHOCK", 35]
+    },{ 
+        name: "Charmander",
+        level:5,
+        xpToLevelUp:50,
+        hp:100,
+        battleHP:100,
+        type:"fire",
+        strength: 15,
+        image:"assets/images/Charmander.png",
+        special:["EMBER", 25]
+    }] 
+
+    //determin spacing per character on the page  
+    function intgame(){ 
+        $("#gameplay").html("")
+        var num = Math.floor(12/charArr.length)
+        var charSpace =num*charArr.length
+        //determine the remaining space if characters dont evenly fit onto one row
+        if(num>1 && charSpace<12){
+            var marginSpace = (12-charSpace)/2
+        }
+        //add the marginSpace onto the left side of the gamePlayDiv
+        if(marginSpace>=1){
+            var spaceDiv = $("<div class=col-md-"+marginSpace+">")
+            $("#gameplay").append(spaceDiv)
+        }
+        //display available characters       
+        for(var i=0; i<charArr.length; i++){   
+            var charThing = $("<div class='myChar col-md-"+num+" border'value='"+i+"'><img src='"+charArr[i].image+
+                "'style='width:175px; height:175px;'/><h2>"+charArr[i].name+"</h2><p>Type :"+charArr[i].type+"</p><p>Level: "+charArr[i].level+"</p><p>HP: "+charArr[i].hp+
+                    "</p><p>Strength :"+charArr[i].strength+"</p><p>XP until next level: "+ charArr[i].xpToLevelUp+"</p><p>Special Attack: </p>"+charArr[i].special[0]+"<span>: </span>"+charArr[i].special[1]+"</div>")
+            $("#gameplay").append(charThing)
+        }
+        alert("Please choose a character to play!")
+        gameBegin=true
+    }
+
+$(document).on("click", ".myChar", function(){
+    //choose player hero
+    if(isHeroChosen===false){
+        chosenHero=charArr[$(this).attr("value")]
+        isHeroChosen=true
+        $(this).addClass("fader")
+        var myTimeOut = setTimeout(function(){
+            alert("Now chose an computer enemy to battle!")
+        }, 500 )
+    }
+    //choose enemy hero
+    else if(isEnemyChosen===false && chosenHero.name!== charArr[$(this).attr("value")]){
+        chosenEnemy=charArr[$(this).attr("value")]
+        isEnemyChosen=true
+        $(this).addClass("fader")
+    }
+    if(isHeroChosen && isEnemyChosen){
+
+        var battleStart = setTimeout(function(){
+            var gameHero= $( "<div class='col-md-4 player'><div class='progress'><div class='progress-bar progress-bar-success'"+
+            "id='userHealth' style='width: 100%'>100/100</div></div><h3 class='healthBarTitle'>Health</h3><img src='"+chosenHero.image+
+            "'style='width:350px; height:350px;'/><br><button class='button button-neutral attackBtn' type='button'>ATTACK</button>"+
+            "<br><button class='button button-neutral defendBtn' type='button'>DEFEND</button></div>")
+            $("#gameplay").html(gameHero)
+
+            var gamePrompt= $("<div class='col-md-4 gamePrompt' style='height:500px'><h1 class='text-center' id='battleMessage'>Fight!!!</h1>"+
+            "<h2 id='battlePrompt'></h2></div>")
+            $("#gameplay").append(gamePrompt)
+
+            var gameEnemy= $("<div class='col-md-4 computer'><div class='progress'><div class='progress-bar progress-bar-success'"+
+            "id='computerHealth' style='width: 100%'>100/100</div></div><h3 class='healthBarTitle'>Health</h3><img src='"+chosenEnemy.image+
+            "'style='width:350px; height:350px;'/></div>")
+            $("#gameplay").append(gameEnemy)
+            
+            alert("Get ready for battle!")
+            attackUser()
+        }, 500)
+    }
+})
+
+function attackUser(){
+        computerAttack = setInterval(function(){
+        //subtract Enemy's strength from Hero's battle hp. Two HP's needed to track pokemon's current HP and Max HP for the health bar
+        userHealth=chosenHero.hp
+        chosenHero.battleHP -= chosenEnemy.strength
+        userHealth=chosenHero.battleHP
+        //Update the Health Bar
+        $("#userHealth").css("width", (userHealth/chosenHero.hp)*100+"%")
+        $("#userHealth").text(Math.floor((userHealth/chosenHero.hp)*100)+"/100")
+        $("#battlePrompt").prepend(chosenEnemy.name+" attacked "+ chosenHero.name +" for " + chosenEnemy.strength + " damage! <br>")
+    },1000)
+}
+
+function lvlUP(){
+    chosenHero.level++
+    chosenHero.strength+=5
+    chosenHero.xpToLevelUp=50
+    chosenHero.hp+=50
+    chosenHero.special[1]+=50
+    $("#battlePrompt").append(chosenHero.name+" has leveled up!" + chosenHero.name+" is now level "+
+    chosenHero.level +" HP increased by 50 points, Strength increased by 5 points, Special Attack increased by 50 points!<br>" +
+    chosenHero.xpToLevelUp+" xp more to level up!")
+}
+
+$(document).on("click", ".attackBtn", function(){
+    if(isEnemyAlive && isHeroAlive){
+      //subtract Hero's strength from Enemy's battle hp. Two HP's needed to track pokemon's current HP and Max HP for the health bar
+      computerHealth = chosenEnemy.battleHP
+      chosenEnemy.battleHP = computerHealth-chosenHero.strength
+      computerHealth = chosenEnemy.battleHP
+      //Update the Health Bar 
+      $("#battlePrompt").prepend(chosenHero.name+" attacked "+ chosenEnemy.name+" for " + chosenHero.strength + " damage! <br>")
+      $("#computerHealth").css("width", (computerHealth/chosenEnemy.hp)*100+"%")
+      $("#computerHealth").text(computerHealth+"/"+chosenHero.hp)
+      //if enemy health is less than 20 change the health bar to be red
+      if(chosenEnemy.battleHP<=20){
+        $("#computerHealth").attr("class", "progress-bar-danger")  //sets computerHealth bar to red when 20 BattleHP left
+      } 
+      if(chosenHero.battleHP<=20){
+        $("#userHealth").attr("class", "progress-bar-danger") //sets UserHealth bar to red when 20 BattleHP left
+      }
+      if(chosenHero.battleHP<=0){
+        $("#userHealth").text(0+"/100")
+        $(".player").html("") //removes player pokemon from div
+        $("#battleMessage").text(chosenHero.name+" has been defeated!")
+        clearInterval(computerAttack)
+        chosenHero.battleHP=chosenHero.hp
+        var endBattle = setTimeout(function(){
+            alert("You died!!!")  
+            $(".computer").html("") //removes player pokemon from div
+            isEnemyChosen=false
+            isHeroChose=false
+            isHeroAlive=false
+            isBattle=false
+            intgame()
+          }, 800)
+      }
+      if(chosenEnemy.battleHP <=0){   
+        $("#computerHealth").text(0+"/100")
+          clearInterval(computerAttack)
+          //update player on end of battle status
+          var updateStats = setTimeout(function(){
+            chosenHero.xpToLevelUp-=10
+            $(".computer").html("") //removes computer pokemon from div
+            $("#battleMessage").text(chosenEnemy.name+" has been defeated!")
+            $("#battlePrompt").text("")
+            $("#battlePrompt").text(chosenHero.name+" has gained 10xp" + chosenHero.name+" needs "+
+             chosenHero.xpToLevelUp +" xp more to level up!")
+            chosenEnemy.battleHP = chosenEnemy.hp
+          }, 500)
+          if(chosenHero.xpToLevelUp==0){
+              lvlUP();
+          }
+          var endBattle = setTimeout(function(){
+            alert("enemy died!!!")  
+            $(".player").html("") //removes user pokemon from div
+            isEnemyChosen=false
+            isHeroChose=false
+            isEnemyAlive=false;
+            isBattle=false;
+            intgame()
+          }, 800)
+      }
+    }
+})//end of on click function for attack btn
+        
+    if(gameBegin===false){
+        var isHeroChosen=false
+        var isEnemyChosen=false
+        intgame()
+    }
+
+})//end of $(doucment).ready(function(){}
+
+// var shop = [{
+//     name: "Invisible Cape",
+//     hp:500,
+//     strength: 50,
+//     type:"thunder",
+//     image:"assets/images/geodude.png",
+//     special:["ROCK SMASH", 100]
+// },
+// {
+//     name: "Magical Mushroom",
+//     hp:500,
+//     strength: 50,
+//     type:"grass",
+//     image:"assets/images/geodude.png",
+//     special:["ROCK SMASH", 100]
+// },
+// {
+//     name: "Steroids",
+//     hp:500,
+//     strength: 50,
+//     type:"water",
+//     image:"assets/images/geodude.png",
+//     special:["ROCK SMASH", 100]
+// },
+// {
+//     name: "Enchanted Sword",
+//     hp:500,
+//     strength: 50,
+//     type:"rock",
+//     image:"assets/images/geodude.png",
+//     special:["ROCK SMASH", 100]
+// },
+// {
+//     name: "Laser Gun",
+//     hp:500,
+//     strength: 50,
+//     type:"rock",
+//     image:"assets/images/geodude.png",
+//     special:["ROCK SMASH", 100]
+// }]
+
+// var basicAttack = [{
+//     name: "tackle",
+//     type: "normal",
+//     type:"thunder",
+// },
+// {
+//     name: "Magical Mushroom",
+//     hp:500,
+//     strength: 50,
+//     type:"grass",
+//     image:"assets/images/geodude.png",
+//     special:["ROCK SMASH", 100]
+// },
+// {
+//     name: "Steroids",
+//     hp:500,
+//     strength: 50,
+//     type:"water",
+//     image:"assets/images/geodude.png",
+//     special:["ROCK SMASH", 100]
+// },
+// {
+//     name: "Enchanted Sword",
+//     hp:500,
+//     strength: 50,
+//     type:"rock",
+//     image:"assets/images/geodude.png",
+//     special:["ROCK SMASH", 100]
+// },
+// {
+//     name: "Laser Gun",
+//     hp:500,
+//     strength: 50,
+//     type:"rock",
+//     image:"assets/images/geodude.png",
+//     special:["ROCK SMASH", 100]
+// }]
+</script>
+</body>
+</html>
+
+    
